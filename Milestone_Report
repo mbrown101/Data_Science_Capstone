@@ -1,0 +1,150 @@
+---
+title: "Data Science Capstone Project Milestone Report"
+author: "Michael Brown"
+date: "December 12, 2015"
+output: html_document
+---
+
+
+## Executive Summary  
+
+The purpose of this report is to describe progress in working with the project data and to provide an status on the development of a prediction algorithm. This report will explain the author's exploratory analysis and goals for the app and algorithm. This document is a high level description of the major features of the project data.  It is intended to summarize the strategy for creating a prediction algorithm and Shiny app in a way that is understandable to a non-data scientist manager. 
+
+Key components of the report are: 
+
+1. Demonstrate ability to download the data and successfully load it.
+2. Describe the data using summary statistics.
+3. Report any interesting findings.
+4. (as a result of the report) Get feedback on the prediction algorithm and Shiny app. 
+
+## Task 1: Data Aquisition & Cleaning
+I have elected to not remove any profanity as it is an expressive construct of the english language. I have removed numbers however, as they are typically unique to a particular circumstance and not indicative of a future condition.  There certain exceptions to this of course (e.g. 76 Trombones, 101 Maniacs and 5 golden rings)
+
+```{r message=FALSE , warning=FALSE}
+
+##### Load librarys
+#library(RCurl)
+#library(httr)
+#library(xlsx)
+#library(lubridate)
+library(ggplot2)
+library(R.utils)
+library(reader)
+#library(dils)
+library(stringi)
+library(quanteda) # for tokenization
+#library(tm)
+#library(wordcloud)
+#library(ngram)
+
+### Input Data Locations 
+twitter_Location <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/en_US.twitter.txt'
+news_location <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/en_US.news.txt'
+blogs_location <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/en_US.blogs.txt'
+projDir <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/'
+twitterToken <- 'twitterTokenization.txt'
+newsToken <- 'newsTokenization.txt'
+blogToken <- 'blogTokenization.txt'
+
+location = twitter_Location
+
+#### Select sample locations 
+twitterLines <- countLines(location)
+
+sample_fraction = .00005
+samples = sample_fraction * twitterLines
+sample_locations <- floor(runif(samples , min = 1 , max = twitterLines + 1)) # select sample locations and convert to integers
+sample_locations <- sort(sample_locations) # sort in order
+twitter_sent <- NULL
+
+pointer = 0
+con <- file(location, "r") 
+skip <- sample_locations[1]-1
+
+### Create twitter_sent >> a list of sentences
+for (i in 1:length(sample_locations)) {
+    readLines(con , skip )                                                                # skip lines  
+    twitter_sent[i] <- stri_split_boundaries(readLines(con , 1 ) , type="sentence")
+    pointer <- pointer + 1 + skip
+    skip = sample_locations[i] - pointer
+    }
+
+close(con)        
+twitter_sent  <- unlist(twitter_sent)  # remove embedded lists
+twitter_sent  <- toLower(twitter_sent) # lowercase all words using quanteda
+
+### Tokenize
+twitter.tok <- NULL
+for(i in 1:length(twitter_sent)) {
+    twitter.tok[i] <- tokenize(twitter_sent[i], removeNumbers=TRUE, removePunct=TRUE, removeSeparators=TRUE , removeTwitter=FALSE)
+}
+
+### 2-gram by quanteda
+twitter.tok.2gram <- NULL
+for(i in 1:length(twitter_sent)) {
+    twitter.tok.2gram[i] <- tokenize(twitter_sent[i], removeNumbers=TRUE, removePunct=TRUE, removeSeparators=TRUE ,         removeTwitter=FALSE , ngrams = 2)
+}
+twitter.tok.2gram.df <- as.data.frame(unlist(twitter.tok.2gram))
+for (i in 1:nrow(twitter.tok.2gram.df )){
+    twitter.tok.2gram.df[i,2] <- unlist(strsplit(as.character(twitter.tok.2gram.df[i,1]) , split = '_'))[1]  
+    twitter.tok.2gram.df[i,3] <- unlist(strsplit(as.character(twitter.tok.2gram.df[i,1]) , split = '_'))[2] 
+    }
+
+### 3-gram by quanteda
+twitter.tok.3gram <- NULL
+for(i in 1:length(twitter_sent)) {
+    twitter.tok.3gram[i] <- tokenize(twitter_sent[i], removeNumbers=TRUE, removePunct=TRUE, removeSeparators=TRUE ,         removeTwitter=FALSE , ngrams = 3)
+    }
+twitter.tok.3gram.df <- as.data.frame(unlist(twitter.tok.3gram)) 
+for (i in 1:nrow(twitter.tok.3gram.df )){
+    twitter.tok.3gram.df[i,2] <- unlist(strsplit(as.character(twitter.tok.3gram.df[i,1]) , split = '_'))[1]  
+    twitter.tok.3gram.df[i,3] <- unlist(strsplit(as.character(twitter.tok.3gram.df[i,1]) , split = '_'))[2] 
+    twitter.tok.3gram.df[i,4] <- unlist(strsplit(as.character(twitter.tok.3gram.df[i,1]) , split = '_'))[3] 
+    }
+
+
+# Save data to file 
+#write.csv(tokens, file = paste(projDir , twitterToken))
+
+```
+
+
+## Exporitory Analysis
+#### Basic summary to include:  
+  Word counts, line counts and basic data tables
+  basic plots, such as histograms to illustrate features of the data
+  
+  
+
+```{r}
+
+# Number of tokens
+token_Count <- length(unlist(twitter.tok))
+token_Count
+```
+```{r results = "hide"}
+# Create DFM
+twitterDfm <- dfm(unlist(twitter.tok))
+```
+```{r}
+# Word Frequency
+topTwitterWords <- topfeatures(twitterDfm)
+topTwitterWords
+
+# Visualize top words
+plot(topfeatures(twitterDfm, 100), log = "y", cex = .6, ylab = "Term frequency")
+plot(topfeatures(twitterDfm, 100), cex = .6, ylab = "Term frequency")
+
+# Top 10 biword combinations
+
+
+
+# Top 10 triword combinations
+summary(twitter.tok.3gram.df)
+```
+
+## Modeling
+
+## Prediction
+
+## Creative Exploration

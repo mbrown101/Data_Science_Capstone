@@ -33,6 +33,7 @@ library(reader)
 #library(dils)
 library(stringi)
 library(quanteda) # for tokenization
+library(plyr)
 #library(tm)
 #library(wordcloud)
 #library(ngram)
@@ -73,11 +74,13 @@ close(con)
 twitter_sent  <- unlist(twitter_sent)  # remove embedded lists
 twitter_sent  <- toLower(twitter_sent) # lowercase all words using quanteda
 
-### Tokenize
+### Tokenize and create 1-gram
 twitter.tok <- NULL
 for(i in 1:length(twitter_sent)) {
     twitter.tok[i] <- tokenize(twitter_sent[i], removeNumbers=TRUE, removePunct=TRUE, removeSeparators=TRUE , removeTwitter=FALSE)
 }
+
+twitter.tok.1gram.df <- as.data.frame(unlist(twitter.tok))
 
 ### 2-gram by quanteda
 twitter.tok.2gram <- NULL
@@ -118,9 +121,30 @@ for (i in 1:nrow(twitter.tok.3gram.df )){
 
 ```{r}
 
+
 # Number of tokens
 token_Count <- length(unlist(twitter.tok))
 token_Count
+
+# Frequency of top ten 1-grams
+one_gram = count(twitter.tok.1gram.df , 1)
+names(one_gram) <- c('term' , 'frequency')
+one_gram_sort.df <- one_gram[order(-one_gram[,2]) , ]
+one_gram_sort.df[1:10,]
+
+# Frequency of top ten 2-grams
+two_gram = count(twitter.tok.2gram.df , 1)
+names(two_gram) <- c('term' , 'frequency')
+two_gram_sort.df <- two_gram[order(-two_gram[,2]) , ]
+two_gram_sort.df[1:10,]
+
+# Frequency of top ten 3-grams
+three_gram = count(twitter.tok.3gram.df , 1)
+names(three_gram) <- c('term' , 'frequency')
+three_gram_sort.df <- three_gram[order(-three_gram[,2]) , ]
+three_gram_sort.df[1:10,]
+
+
 ```
 ```{r results = "hide"}
 # Create DFM

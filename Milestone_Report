@@ -37,6 +37,8 @@ library(plyr)
 #library(tm)
 #library(wordcloud)
 #library(ngram)
+library(pander)
+
 
 ### Input Data Locations 
 twitter_Location <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/en_US.twitter.txt'
@@ -143,6 +145,7 @@ three_gram = count(twitter.tok.3gram.df , 1)
 names(three_gram) <- c('term' , 'frequency')
 three_gram_sort.df <- three_gram[order(-three_gram[,2]) , ]
 three_gram_sort.df[1:10,]
+pander(three_gram_sort.df[1:10,])
 
 
 ```
@@ -164,7 +167,7 @@ plot(topfeatures(twitterDfm, 100), cex = .6, ylab = "Term frequency")
 
 
 # Top 10 triword combinations
-summary(twitter.tok.3gram.df)
+
 ```
 
 ## Modeling

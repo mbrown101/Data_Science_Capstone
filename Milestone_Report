@@ -8,40 +8,29 @@ output: html_document
 
 ## Executive Summary  
 
-The purpose of this report is to describe progress in working with the project data and to provide an status on the development of a prediction algorithm. This report will explain the author's exploratory analysis and goals for the app and algorithm. This document is a high level description of the major features of the project data.  It is intended to summarize the strategy for creating a prediction algorithm and Shiny app in a way that is understandable to a non-data scientist manager. 
+The purpose of this report is to describe progress in working with the project data and to provide an status on the development of a prediction algorithm. This report explains the author's exploratory analysis and goals for the app and algorithm. This document is a high level description of the major features of the project data.  The report further summarizes the strategy for creating a prediction algorithm and Shiny app.
 
-Key components of the report are: 
+The data used in this project is derrived from the HC Corpora which can be further researced at www.corpora.heliohost.org.  The three files used in this project contain blogs, tweets and news content.  
 
-1. Demonstrate ability to download the data and successfully load it.
-2. Describe the data using summary statistics.
-3. Report any interesting findings.
-4. (as a result of the report) Get feedback on the prediction algorithm and Shiny app. 
 
 ## Task 1: Data Aquisition & Cleaning
 I have elected to not remove any profanity as it is an expressive construct of the english language. I have removed numbers however, as they are typically unique to a particular circumstance and not indicative of a future condition.  There certain exceptions to this of course (e.g. 76 Trombones, 101 Maniacs and 5 golden rings)
 
+The following R libraries are used in the data analysis process
 ```{r message=FALSE , warning=FALSE}
-
-##### Load librarys
-#library(RCurl)
-#library(httr)
-#library(xlsx)
-#library(lubridate)
 library(ggplot2)
 library(R.utils)
 library(reader)
-#library(dils)
 library(stringi)
 library(quanteda) # for tokenization
+library(RColorBrewer)
 library(plyr)
-#library(tm)
-#library(wordcloud)
-#library(ngram)
 library(pander)
+```
 
+```{r echo = FALSE}
 
-### Input Data Locations 
-twitter_Location <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/en_US.twitter.txt'
+twitter_location <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/en_US.twitter.txt'
 news_location <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/en_US.news.txt'
 blogs_location <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/en_US.blogs.txt'
 projDir <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/'
@@ -49,7 +38,63 @@ twitterToken <- 'twitterTokenization.txt'
 newsToken <- 'newsTokenization.txt'
 blogToken <- 'blogTokenization.txt'
 
-location = twitter_Location
+```
+
+### File statistics
+A basic summary of the file content follows:
+
+File                |  Size on Disk [MB] | Lines   | Word Count
+------------------- | ------------------ | ------- | ----------
+en_US.twitter.txt   |  167.1             | `r countLines(twitter_location)` |  122
+en_US.news.txt      |  205.8             | `r countLines(news_location)` |  121
+en_US.blogs.txt     |  210.2             | `r countLines(blogs_location)`  |  1212
+
+
+
+```{r message=FALSE , warning=FALSE}
+
+### Read in data
+
+#### Twitter
+con <- file(twitter_location, "r") 
+twitter.df <- readLines(con , n = -1 , warn = FALSE)
+close(con)
+
+### Blogs
+con <- file(blogs_location, "r") 
+blogs.df <- readLines(con , n = -1 , warn = FALSE)
+close(con)
+
+### News
+con <- file(news_location, "r") 
+news.df <- readLines(con , n = -1 , warn = FALSE)
+close(con)
+
+### Twitter DFM with Quanteda
+twitter_tfl <- textfile(twitter_location)
+twitterCorpus <- corpus(twitter_tfl)
+dfm_twitterCorpus <- dfm(twitterCorpus)
+topfeatures(dfm_twitterCorpus, 20)
+plot(dfm_twitterCorpus, max.words=75, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+
+### News DFM with Quanteda
+news_tfl <- textfile(news_location)
+newsCorpus <- corpus(news_tfl)
+dfm_newsCorpus <- dfm(newsCorpus)
+topfeatures(dfm_newsCorpus, 20)
+plot(dfm_newsCorpus, max.words=75, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+
+### Blogs DFM with Quanteda
+blogs_tfl <- textfile(blogs_location)
+blogsCorpus <- corpus(blogs_tfl)
+dfm_blogsCorpus <- dfm(blogsCorpus)
+topfeatures(dfm_blogsCorpus, 20)
+plot(dfm_blogsCorpus, max.words=75, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+
+
+
+
+location = twitter_location
 
 #### Select sample locations 
 twitterLines <- countLines(location)

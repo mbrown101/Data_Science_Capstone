@@ -73,23 +73,28 @@ close(con)
 ### Twitter DFM with Quanteda
 twitter_tfl <- textfile(twitter_location)
 twitterCorpus <- corpus(twitter_tfl)
-dfm_twitterCorpus <- dfm(twitterCorpus)
-topfeatures(dfm_twitterCorpus, 20)
-plot(dfm_twitterCorpus, max.words=75, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+dfm_twitter <- dfm(twitterCorpus , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE)
+topfeatures(dfm_twitter, 20)
+plot(dfm_twitter, max.words=100, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+
+two_gram_dfm_twitter <- dfm(twitterCorpus , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 2)
+
+topfeatures(two_gram_dfm_twitter, 20)
+
 
 ### News DFM with Quanteda
 news_tfl <- textfile(news_location)
 newsCorpus <- corpus(news_tfl)
 dfm_newsCorpus <- dfm(newsCorpus)
 topfeatures(dfm_newsCorpus, 20)
-plot(dfm_newsCorpus, max.words=75, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+plot(dfm_newsCorpus, max.words=100, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
 
 ### Blogs DFM with Quanteda
 blogs_tfl <- textfile(blogs_location)
 blogsCorpus <- corpus(blogs_tfl)
 dfm_blogsCorpus <- dfm(blogsCorpus)
 topfeatures(dfm_blogsCorpus, 20)
-plot(dfm_blogsCorpus, max.words=75, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+plot(dfm_blogsCorpus, max.words=100, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
 
 
 

@@ -1,24 +1,26 @@
 ---
 title: "Data Science Capstone Project Milestone Report"
 author: "Michael Brown"
-date: "December 12, 2015"
+date: "December 24, 2015"
 output: html_document
 ---
 
 
 ## Executive Summary  
 
-The purpose of this report is to describe progress in working with the project data and to provide an status on the development of a prediction algorithm. This report explains the author's exploratory analysis and goals for the app and algorithm. This document is a high level description of the major features of the project data.  The report further summarizes the strategy for creating a prediction algorithm and Shiny app.
+The purpose of this report is to describe progress in working with the project data and to provide a status on the development of a prediction algorithm. This report explains the author's exploratory analysis and goals for the app and algorithm. This document is a high level description of the major features of the project data.  The report further summarizes the strategy for creating a prediction algorithm and Shiny app.
 
-The data used in this project is derrived from the HC Corpora which can be further researced at www.corpora.heliohost.org.  The three files used in this project contain blogs, tweets and news content.  
+The data used in this project is derrived from the HC Corpora which can be further researched at www.corpora.heliohost.org.  The three files used in this project contain blogs, tweets and news content.  
 
 
-## Task 1: Data Aquisition & Cleaning
-I have elected to not remove any profanity as it is an expressive construct of the english language. I have removed numbers however, as they are typically unique to a particular circumstance and not indicative of a future condition.  There certain exceptions to this of course (e.g. 76 Trombones, 101 Maniacs and 5 golden rings)
+## Initialization
+  
+#### The following R libraries are used in the data analysis process
+```{r load_libraries , message=FALSE , warning=FALSE}
 
-The following R libraries are used in the data analysis process
-```{r message=FALSE , warning=FALSE}
 library(ggplot2)
+library(gridExtra)
+library(cowplot)
 library(R.utils)
 library(reader)
 library(stringi)
@@ -26,202 +28,168 @@ library(quanteda) # for tokenization
 library(RColorBrewer)
 library(plyr)
 library(pander)
+
 ```
 
-```{r echo = FALSE}
+```{r set_vars , echo = FALSE}
 
+### Set options
+options(scipen=999)          # force explicit expression of numbers vice scientific notation
+
+### Assign director locations to variables 
 twitter_location <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/en_US.twitter.txt'
 news_location <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/en_US.news.txt'
 blogs_location <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/en_US.blogs.txt'
 projDir <- '/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/en_US/'
-twitterToken <- 'twitterTokenization.txt'
-newsToken <- 'newsTokenization.txt'
-blogToken <- 'blogTokenization.txt'
 
 ```
 
-### File statistics
-A basic summary of the file content follows:
+## Data Aquisition and Cleaning
+#### Create a corpus and document frequency matrix for each full text using the Quanteda library
+I have elected to not remove any profanity as it is an expressive construct of the english language. I have removed numbers however, as they are typically unique to a particular circumstance and often not indicative of a future condition.
+```{r dfm_formation , message=FALSE , warning=FALSE}
 
-File                |  Size on Disk [MB] | Lines   | Word Count
-------------------- | ------------------ | ------- | ----------
-en_US.twitter.txt   |  167.1             | `r countLines(twitter_location)` |  122
-en_US.news.txt      |  205.8             | `r countLines(news_location)` |  121
-en_US.blogs.txt     |  210.2             | `r countLines(blogs_location)`  |  1212
-
-
-
-```{r message=FALSE , warning=FALSE}
-
-### Read in data
-
-#### Twitter
-con <- file(twitter_location, "r") 
-twitter.df <- readLines(con , n = -1 , warn = FALSE)
-close(con)
-
-### Blogs
-con <- file(blogs_location, "r") 
-blogs.df <- readLines(con , n = -1 , warn = FALSE)
-close(con)
-
-### News
-con <- file(news_location, "r") 
-news.df <- readLines(con , n = -1 , warn = FALSE)
-close(con)
-
-### Twitter DFM with Quanteda
+### Twitter 
 twitter_tfl <- textfile(twitter_location)
 twitterCorpus <- corpus(twitter_tfl)
 dfm_twitter <- dfm(twitterCorpus , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE)
-topfeatures(dfm_twitter, 20)
-plot(dfm_twitter, max.words=100, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+dfm_twitter.df <- t(as.data.frame(dfm_twitter)) ##  also 1-gram
 
-two_gram_dfm_twitter <- dfm(twitterCorpus , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 2)
-
-topfeatures(two_gram_dfm_twitter, 20)
-
-
-### News DFM with Quanteda
+### News 
 news_tfl <- textfile(news_location)
 newsCorpus <- corpus(news_tfl)
-dfm_newsCorpus <- dfm(newsCorpus)
-topfeatures(dfm_newsCorpus, 20)
-plot(dfm_newsCorpus, max.words=100, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+dfm_news <- dfm(newsCorpus)
+dfm_news.df <- t(as.data.frame(dfm_news))
 
-### Blogs DFM with Quanteda
+### Blogs 
 blogs_tfl <- textfile(blogs_location)
 blogsCorpus <- corpus(blogs_tfl)
-dfm_blogsCorpus <- dfm(blogsCorpus)
-topfeatures(dfm_blogsCorpus, 20)
-plot(dfm_blogsCorpus, max.words=100, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+dfm_blogs <- dfm(blogsCorpus)
+dfm_blogs.df <- t(as.data.frame(dfm_blogs))
 
+```
 
+#### Create a corpus and document frequency matrix from a sample of each text using the Quanteda library
+```{r sample_files , message=FALSE , warning=FALSE}
 
+sample_fraction <- 0.01
 
-location = twitter_location
+### Twitter
+con <- file(twitter_location, "r") 
+twitter.list <- as.list(readLines(con , n = -1 , warn = FALSE))
+close(con)
+twitter.sample <- unlist(sample(twitter.list , sample_fraction*length(twitter.list)))
+twitterCorpus_sample <- corpus(twitter.sample)
+dfm_twitter_sample <- dfm(twitterCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE)
 
-#### Select sample locations 
-twitterLines <- countLines(location)
+### News
+con <- file(news_location, "r") 
+news.list <- readLines(con , n = -1 , warn = FALSE)
+close(con)
+news.sample <- unlist(sample(news.list  , sample_fraction*length(news.list)))
+newsCorpus_sample <- corpus(news.sample)
+dfm_news_sample <- dfm(newsCorpus_sample  , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE)
 
-sample_fraction = .00005
-samples = sample_fraction * twitterLines
-sample_locations <- floor(runif(samples , min = 1 , max = twitterLines + 1)) # select sample locations and convert to integers
-sample_locations <- sort(sample_locations) # sort in order
-twitter_sent <- NULL
+### Blogs
+con <- file(blogs_location, "r") 
+blogs.list <- readLines(con , n = -1 , warn = FALSE)
+close(con)
+blogs.sample <- unlist(sample(blogs.list , sample_fraction*length(blogs.list)))
+blogsCorpus_sample <- corpus(blogs.sample)
+dfm_blogs_sample <- dfm(blogsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE)
 
-pointer = 0
-con <- file(location, "r") 
-skip <- sample_locations[1]-1
+```
 
-### Create twitter_sent >> a list of sentences
-for (i in 1:length(sample_locations)) {
-    readLines(con , skip )                                                                # skip lines  
-    twitter_sent[i] <- stri_split_boundaries(readLines(con , 1 ) , type="sentence")
-    pointer <- pointer + 1 + skip
-    skip = sample_locations[i] - pointer
-    }
+## Sample Data for Subsequent Analysis
+Create 2-grams and 3-grams from the sampled data with Quanteda
+```{r n_grams}
 
-close(con)        
-twitter_sent  <- unlist(twitter_sent)  # remove embedded lists
-twitter_sent  <- toLower(twitter_sent) # lowercase all words using quanteda
+### Twitter n-grams
+two_gram_dfm_twitter_sample <- dfm(twitterCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 2)
+three_gram_dfm_twitter_sample <- dfm(twitterCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 3)
 
-### Tokenize and create 1-gram
-twitter.tok <- NULL
-for(i in 1:length(twitter_sent)) {
-    twitter.tok[i] <- tokenize(twitter_sent[i], removeNumbers=TRUE, removePunct=TRUE, removeSeparators=TRUE , removeTwitter=FALSE)
-}
+### News n-grams
+two_gram_dfm_news_sample <- dfm(newsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 2)
+three_gram_dfm_news_sample <- dfm(newsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 3)
 
-twitter.tok.1gram.df <- as.data.frame(unlist(twitter.tok))
-
-### 2-gram by quanteda
-twitter.tok.2gram <- NULL
-for(i in 1:length(twitter_sent)) {
-    twitter.tok.2gram[i] <- tokenize(twitter_sent[i], removeNumbers=TRUE, removePunct=TRUE, removeSeparators=TRUE ,         removeTwitter=FALSE , ngrams = 2)
-}
-twitter.tok.2gram.df <- as.data.frame(unlist(twitter.tok.2gram))
-for (i in 1:nrow(twitter.tok.2gram.df )){
-    twitter.tok.2gram.df[i,2] <- unlist(strsplit(as.character(twitter.tok.2gram.df[i,1]) , split = '_'))[1]  
-    twitter.tok.2gram.df[i,3] <- unlist(strsplit(as.character(twitter.tok.2gram.df[i,1]) , split = '_'))[2] 
-    }
-
-### 3-gram by quanteda
-twitter.tok.3gram <- NULL
-for(i in 1:length(twitter_sent)) {
-    twitter.tok.3gram[i] <- tokenize(twitter_sent[i], removeNumbers=TRUE, removePunct=TRUE, removeSeparators=TRUE ,         removeTwitter=FALSE , ngrams = 3)
-    }
-twitter.tok.3gram.df <- as.data.frame(unlist(twitter.tok.3gram)) 
-for (i in 1:nrow(twitter.tok.3gram.df )){
-    twitter.tok.3gram.df[i,2] <- unlist(strsplit(as.character(twitter.tok.3gram.df[i,1]) , split = '_'))[1]  
-    twitter.tok.3gram.df[i,3] <- unlist(strsplit(as.character(twitter.tok.3gram.df[i,1]) , split = '_'))[2] 
-    twitter.tok.3gram.df[i,4] <- unlist(strsplit(as.character(twitter.tok.3gram.df[i,1]) , split = '_'))[3] 
-    }
-
-
-# Save data to file 
-#write.csv(tokens, file = paste(projDir , twitterToken))
+### Blogs n-grams
+two_gram_dfm_blogs_sample <- dfm(blogsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 2)
+three_gram_dfm_blogs_sample <- dfm(blogsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 3)
 
 ```
 
 
-## Exporitory Analysis
-#### Basic summary to include:  
-  Word counts, line counts and basic data tables
-  basic plots, such as histograms to illustrate features of the data
-  
-  
 
-```{r}
+## File statistics of Full Files 
+A basic summary of the complete file content follows:
 
+File                |  Size on Disk [MB] | Lines   | Word Count [Tokens]
+------------------- | ------------------ | ------- | ----------
+en_US.twitter.txt   |  `r  file.size(twitter_location)/1000000` | `r countLines(twitter_location)` |  `r sum(dfm_twitter.df[,1])`
+en_US.news.txt      |  `r  file.size(news_location)/1000000`    | `r countLines(news_location)`    |  `r sum(dfm_news.df[,1])`
+en_US.blogs.txt     |  `r  file.size(blogs_location)/1000000`   | `r countLines(blogs_location)`   |  `r sum(dfm_blogs.df[,1])`
 
-# Number of tokens
-token_Count <- length(unlist(twitter.tok))
-token_Count
+## Exploritory Analysis of Sample Data:  
+#### Analysis of Twitter sample data
+```{r twitter_analysis}
 
-# Frequency of top ten 1-grams
-one_gram = count(twitter.tok.1gram.df , 1)
-names(one_gram) <- c('term' , 'frequency')
-one_gram_sort.df <- one_gram[order(-one_gram[,2]) , ]
-one_gram_sort.df[1:10,]
+par(las=2)
+par(mar=c(5,5,4,0))  #reset margins
 
-# Frequency of top ten 2-grams
-two_gram = count(twitter.tok.2gram.df , 1)
-names(two_gram) <- c('term' , 'frequency')
-two_gram_sort.df <- two_gram[order(-two_gram[,2]) , ]
-two_gram_sort.df[1:10,]
-
-# Frequency of top ten 3-grams
-three_gram = count(twitter.tok.3gram.df , 1)
-names(three_gram) <- c('term' , 'frequency')
-three_gram_sort.df <- three_gram[order(-three_gram[,2]) , ]
-three_gram_sort.df[1:10,]
-pander(three_gram_sort.df[1:10,])
-
-
-```
-```{r results = "hide"}
-# Create DFM
-twitterDfm <- dfm(unlist(twitter.tok))
-```
-```{r}
-# Word Frequency
-topTwitterWords <- topfeatures(twitterDfm)
-topTwitterWords
-
-# Visualize top words
-plot(topfeatures(twitterDfm, 100), log = "y", cex = .6, ylab = "Term frequency")
-plot(topfeatures(twitterDfm, 100), cex = .6, ylab = "Term frequency")
-
-# Top 10 biword combinations
-
-
-
-# Top 10 triword combinations
+as.data.frame(topfeatures(dfm_twitter_sample, 20))
+barplot(topfeatures(dfm_twitter_sample, 20) , main = "Histogram of top 20 Twitter Terms [1-gram]", xlab="Twitter Term" , ylab = "Frequency")
+barplot(topfeatures(two_gram_dfm_twitter_sample, 20) , main = "Histogram of top 20 Twitter Terms [2-gram]", xlab="Twitter Term" , ylab = "Frequency")
+barplot(topfeatures(three_gram_dfm_twitter_sample, 20), main = "Histogram of top 20 Twitter Terms [3-gram]", xlab="Twitter Term" , ylab = "Frequency")
 
 ```
 
-## Modeling
+#### Analysis of Blogs sample data
+```{r blogs_analysis}
 
-## Prediction
+par(las=2)
+par(mar=c(10,5,4,0))  #reset margins
 
-## Creative Exploration
+topfeatures(dfm_blogs_sample, 20)
+par(mfrow=c(1,3))
+barplot(topfeatures(dfm_blogs_sample, 20) , main = "Histogram - Top 20 Blog Terms", xlab="Twitter Term" , ylab = "Frequency")
+barplot(topfeatures(two_gram_dfm_blogs_sample, 20) , main = "Histogram - Top 20 Blog 2-grams", xlab="Twitter Term" , ylab = "Frequency")
+barplot(topfeatures(three_gram_dfm_blogs_sample, 20), main = "Histogram - Top 20 Blog 3-gram", xlab="Twitter Term" , ylab = "Frequency")
+
+```
+
+#### Analysis of News sample data
+```{r news_analysis}
+
+par(las=2)  #Perpendicular labels
+par(mar=c(5,5,4,0))  #reset margins
+
+topfeatures(dfm_news_sample, 40)
+barplot(topfeatures(dfm_news_sample, 20) , main = "Histogram - Top 20 Twitter News Terms", xlab="Twitter Term" , ylab = "Frequency")
+barplot(topfeatures(two_gram_dfm_news_sample, 20) , main = "Histogram - Top 20 News 2-grams", xlab="Twitter Term" , ylab = "Frequency")
+barplot(topfeatures(three_gram_dfm_news_sample, 20), main = "Histogram - Top 20 News 3-grams", xlab="Twitter Term" , ylab = "Frequency")
+
+```
+
+#### Visual Comparitive of Sampled Files
+```{r comparitive_analysis , message=FALSE , warning=FALSE}
+
+par(mfrow=c(1,3))
+
+plot(dfm_twitter_sample, max.words=100, colors = brewer.pal(6, "Dark2"), scale=c(8, .5) , main = "Top 100 Twitter Words")
+plot(dfm_news_sample, max.words=100, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+plot(dfm_blogs_sample, max.words=100, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
+
+```
+
+## Conclusion
+Based on the above research, it is concluded that the corpus formed by the blogs, twitter and news files create a distribution of words and n-grams.  This distribution can, in theory, be used to match an input phrase and return a probabilistic response that has some likelihood of predicting the next word in the phrase.  An obvious exception to this is the case where the corpus does not carry the phrase combination.  Another exception is the case where the phrase is a common figure of speech, for example "on the way to.....".  It is clear that there will be certain corner cases where the simple prediction algorithm will fail, however, there are likely to be many cases where the prediction is sufficiently accurate that the user will get the sense that the application functions at some rudimentary level of success.  
+
+## Next Steps
+Remaining tasks required to implement a functional natural language predictive application include but are not limited to:
+- Determine what level of sampling is needed to adequately predict the next word of a phrase 
+- Consider differential sampling rates between news, blogs and twitter corpuses
+- Tune a predictive model to properly select 2-gram and 3-gram combinations given their frequency of occurrence
+- Consider the case when the input phrase is not in the corpus.  How shall the system guess a word knowing that the high frequency words (to, and, I, etc.) may not be structurally appropriate.  
+- Create and test a shiny app
+- Submit final report
+

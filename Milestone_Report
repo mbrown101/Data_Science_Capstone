@@ -1,14 +1,13 @@
 ---
 title: "Data Science Capstone Project Milestone Report"
-author: "Michael Brown"
-date: "December, 2015"
+author: "Michael Brown | December, 2015"
 output: html_document
 ---
 
 
 ## Executive Summary  
 
-The purpose of this report is to describe progress in working with the project data and to provide a status on the development of a prediction algorithm. This report presents the author's exploratory analysis and goals for the app and algorithm. This document is a high level description of the major features of the project data.  The report further summarizes the strategy for creating a prediction algorithm and Shiny app.
+The purpose of this report is to describe progress in working with the project data and to provide a status on the development of a prediction algorithm. This report presents the author's exploratory analysis and goals for the app and algorithm. This document is a high level description of the major features of the project data.  The report further summarizes selected considerations for creating a prediction algorithm and Shiny app.
 
 The data used in this project is derived from the HC Corpora which can be further researched at www.corpora.heliohost.org.  The three files used in this project contain blogs, tweets and news content.  
 
@@ -17,16 +16,11 @@ The data used in this project is derived from the HC Corpora which can be furthe
 The following R libraries are used in the data analysis process
 ```{r load_libraries , message=FALSE , warning=FALSE}
 
-library(ggplot2)
-#library(gridExtra)
-#library(cowplot)
-library(R.utils)
-#library(reader)
-#library(stringi)
-library(quanteda) # for tokenization
-library(RColorBrewer)
-library(plyr)
-
+library(ggplot2)       # plotting
+library(R.utils)       # utility
+library(quanteda)      # for tokenization
+library(RColorBrewer)  # wordcloud
+library(plyr)          # data ordering
 
 ```
 
@@ -81,7 +75,7 @@ I have elected to not remove any profanity as it is an expressive construct of t
 ```
 
 #### Create a corpus and document frequency matrix from a sample of each text using the Quanteda library
-For this report I randomly sample 1% of each file.  The final app may require a higher sampling level in order to obtain a broader spectrum of terms.
+For this report I randomly sample 1% of each file.  The final app may require a higher sampling rate to obtain a broader spectrum of terms.
 ```{r sample_files , message=FALSE , warning=FALSE}
 
 sample_fraction <- 0.01
@@ -92,7 +86,8 @@ twitter.list <- as.list(readLines(con , n = -1 , warn = FALSE))
 close(con)
 twitter.sample <- unlist(sample(twitter.list , sample_fraction*length(twitter.list)))
 twitterCorpus_sample <- corpus(twitter.sample)
-dfm_twitter_sample <- dfm(twitterCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE)
+dfm_twitter_sample <- dfm(twitterCorpus_sample , toLower = TRUE , removeNumbers = TRUE , 
+                          removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE)
 
 ### News
 con <- file(news_location, "r") 
@@ -100,7 +95,8 @@ news.list <- readLines(con , n = -1 , warn = FALSE)
 close(con)
 news.sample <- unlist(sample(news.list  , sample_fraction*length(news.list)))
 newsCorpus_sample <- corpus(news.sample)
-dfm_news_sample <- dfm(newsCorpus_sample  , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE)
+dfm_news_sample <- dfm(newsCorpus_sample  , toLower = TRUE , removeNumbers = TRUE ,
+                       removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE)
 
 ### Blogs
 con <- file(blogs_location, "r") 
@@ -108,7 +104,8 @@ blogs.list <- readLines(con , n = -1 , warn = FALSE)
 close(con)
 blogs.sample <- unlist(sample(blogs.list , sample_fraction*length(blogs.list)))
 blogsCorpus_sample <- corpus(blogs.sample)
-dfm_blogs_sample <- dfm(blogsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE)
+dfm_blogs_sample <- dfm(blogsCorpus_sample , toLower = TRUE , removeNumbers = TRUE ,
+                        removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE)
 
 ```
 
@@ -117,16 +114,22 @@ Create 2-grams and 3-grams from the sampled data with Quanteda
 ```{r n_grams , message=FALSE , warning=FALSE}
 
 ### Twitter n-grams
-two_gram_dfm_twitter_sample <- dfm(twitterCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 2)
-three_gram_dfm_twitter_sample <- dfm(twitterCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 3)
+two_gram_dfm_twitter_sample <- dfm(twitterCorpus_sample , toLower = TRUE , removeNumbers = TRUE ,
+                                   removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 2)
+three_gram_dfm_twitter_sample <- dfm(twitterCorpus_sample , toLower = TRUE , removeNumbers = TRUE ,
+                                     removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 3)
 
 ### News n-grams
-two_gram_dfm_news_sample <- dfm(newsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 2)
-three_gram_dfm_news_sample <- dfm(newsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 3)
+two_gram_dfm_news_sample <- dfm(newsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE ,
+                                removeTwitter = TRUE , removeSeparators = TRUE , ngram = 2)
+three_gram_dfm_news_sample <- dfm(newsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE ,
+                                  removeTwitter = TRUE , removeSeparators = TRUE , ngram = 3)
 
 ### Blogs n-grams
-two_gram_dfm_blogs_sample <- dfm(blogsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 2)
-three_gram_dfm_blogs_sample <- dfm(blogsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE , removeTwitter = TRUE , removeSeparators = TRUE , ngram = 3)
+two_gram_dfm_blogs_sample <- dfm(blogsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE ,
+                                 removeTwitter = TRUE , removeSeparators = TRUE , ngram = 2)
+three_gram_dfm_blogs_sample <- dfm(blogsCorpus_sample , toLower = TRUE , removeNumbers = TRUE , removePunct = TRUE ,
+                                   removeTwitter = TRUE , removeSeparators = TRUE , ngram = 3)
 
 ```
 
@@ -137,10 +140,7 @@ three_gram_dfm_blogs_sample <- dfm(blogsCorpus_sample , toLower = TRUE , removeN
 
 par(las=2)
 par(mfrow=c(1,3))             # 1 row, 3 col
-#par(mar=c(5,10,4,2) + 0.2 )   # set margins 
-#     mgp=c(5,1,0),            # 
-#     oma=c(4,2,0,0),          # set outer margins
-#     pin=c(2.3,2.3))          # width , height [in]
+par( mai = c(.6, 0.55, 0.1, 0.25))
 
 barplot(topfeatures(dfm_twitter_sample, 20) , main = "Top 20 Twitter Terms", ylab = "Twitter Term" , horiz=TRUE , col = 'darkgoldenrod1')
 barplot(topfeatures(two_gram_dfm_twitter_sample, 20) , main = "Top 20 Twitter 2-Grams", xlab="Frequency" ,  horiz=TRUE)
@@ -153,11 +153,8 @@ barplot(topfeatures(three_gram_dfm_twitter_sample, 20), main = "Top 20 Twitter 3
 
 par( las=2)
 par( mfrow=c(1,3))             # 1 row, 3 col
-par( mai = c(1, 0.15, 0.1, 0.15))
-#     mar=c(5,6,4,0)+0.1,        # set margins 
-#     mgp=c(5,1,0),              # 
-#     oma=c(4,2,0,0),            # set outer margins
-#     pin=c(2.3,2.3))          # width , height [in]
+par( mai = c(.6, 0.55, 0.1, 0.25))
+
 barplot(topfeatures(dfm_blogs_sample, 20) , main = "Top 20 Blog Terms",  ylab = "Term" , horiz=TRUE , col = 'darkgoldenrod1')
 barplot(topfeatures(two_gram_dfm_blogs_sample, 20) , main = "Top 20 Blog 2-Grams", xlab="Frequency" ,  horiz=TRUE)
 barplot(topfeatures(three_gram_dfm_blogs_sample, 20), main = "Top 20 Blog 3-Grams",  horiz=TRUE , col = 'dodgerblue2')
@@ -169,11 +166,7 @@ barplot(topfeatures(three_gram_dfm_blogs_sample, 20), main = "Top 20 Blog 3-Gram
 
 par(las=2)  #Perpendicular labels
 par( mfrow=c(1,3))              # 1 row, 3 col
-#     mar=c(15,6,4,0)+0.3,       # set margins 
-#     mgp=c(7,1,0),              # Labels, indices, ticks
-#     oma=c(4,2,0,0),           # set outer margins
-#     pin=c(2.3,2.3))            # width , height [in]
-
+par( mai = c(.6, 0.55, 0.1, 0.25))
 
 barplot(topfeatures(dfm_news_sample, 20) , main = "Top 20 News Terms",  ylab = "Term" , horiz=TRUE , col = 'darkgoldenrod1')
 barplot(topfeatures(two_gram_dfm_news_sample, 20) , main = "Top 20 News 2-Grams", xlab="Frequency"  , horiz=TRUE)
@@ -184,22 +177,18 @@ barplot(topfeatures(three_gram_dfm_news_sample, 20), main = "Top 20 News 3-Grams
 #### Comparison of Sampled Files
 The below statistics are compiled for the sampled files:
 
-Sampled File        |  Lines Sampled                 | Unique Terms [Unigrams]       | Unique Bigrams | Unique Trigrams 
-------------------- | ------------------------------ | ----------------------------- | -------------- | ---------------
-en_US.twitter.txt   |  `r  ndoc(dfm_twitter_sample)` | `r dfm_twitter_sample@Dim[2]` |  `r two_gram_dfm_twitter_sample@Dim[2]` | `r three_gram_dfm_twitter_sample@Dim[2]`  
-en_US.news.txt      |  `r  ndoc(dfm_news_sample)`    | `r dfm_news_sample@Dim[2]`    |  `r two_gram_dfm_news_sample@Dim[2]` | 
-`r three_gram_dfm_news_sample@Dim[2]`  
-en_US.blogs.txt     |  `r  ndoc(dfm_blogs_sample)`   | `r dfm_blogs_sample@Dim[2]`   |  `r two_gram_dfm_blogs_sample@Dim[2]` |  `r three_gram_dfm_blogs_sample@Dim[2]`  
+Sampled File   |  Lines Sampled     | Unique Unigrams       | Unique Bigrams | Unique Trigrams
+--------------- | ------------------ | --------------------- | -------------- | ---------------
+en_US.twitter.txt   |  `r  ndoc(dfm_twitter_sample)` | `r dfm_twitter_sample@Dim[2]` |  `r two_gram_dfm_twitter_sample@Dim[2]` | `r three_gram_dfm_twitter_sample@Dim[2]`
+en_US.news.txt   |  `r  ndoc(dfm_news_sample)` | `r dfm_news_sample@Dim[2]` |  `r two_gram_dfm_news_sample@Dim[2]`  |  `r three_gram_dfm_news_sample@Dim[2]`
+en_US.blogs.txt   |  `r  ndoc(dfm_blogs_sample)` | `r dfm_blogs_sample@Dim[2]` |  `r two_gram_dfm_blogs_sample@Dim[2]`  | `r three_gram_dfm_blogs_sample@Dim[2]`
+
 
 
 ```{r comparitive_analysis , message=FALSE , warning=FALSE}
 
 par( mfrow=c(1,3))              # 1 row, 3 col
-#     mar=c(5,6,4,0)+0.1,        # set margins 
-#     mgp=c(5,1,0),              # 
-#     oma=c(4,2,0,0),            # set outer margins
-par( pin=c(2.2,2.2))          # width , height [in]
-par( mai = c(1, 0.15, 0.1, 0.15))
+par( pin=c(2.3,2.3))          # width , height [in]
 
 plot(dfm_twitter_sample, max.words=100, colors = brewer.pal(6, "Dark2"), scale=c(8, .5))
 title("Top 100 Twitter Words")
@@ -219,8 +208,10 @@ Based on the above research, it is concluded that the corpus formed by the blogs
 Remaining tasks required to implement a functional natural language predictive application include but are not limited to:
 - Determine what level of sampling is needed to adequately predict the next word of a phrase   
 - Consider differential sampling rates between news, blogs and twitter corpuses  
-* Tune a predictive model to properly select 2-gram and 3-gram combinations given their frequency of occurrence  
-- Consider the case when the input phrase is not in the corpus.  How shall the system guess a word knowing that the high frequency words (to, and, I, etc.) may not be structurally appropriate.    
+- Tune a predictive model to properly select 2-gram and 3-gram combinations given their frequency of occurrence  
+- Consider the case where the input phrase is not in the corpus    
+- Develop a method to guess a word if not known
+- Handle the case where a high frequency word does not allow a good guess      
 - Create and test a shiny app  
 - Submit final report  
 

@@ -16,7 +16,7 @@ shinyServer(
     # sorted columns are colored now because CSS are attached to them
     output$matchTable = renderDataTable({
       arrange(oracle[ which(oracle$leading_Bigram == input$stringInput ) , ], -count)[1:input$sliderGuesses,]
-    }, options = list(orderClasses = TRUE))
+    }, options = list(orderClasses = TRUE , searching = FALSE , paging = FALSE))
 
   }
 )

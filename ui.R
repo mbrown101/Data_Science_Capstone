@@ -6,27 +6,47 @@ shinyUI(fluidPage(
     sidebarLayout(
         sidebarPanel(
         
-             helpText("This project seeks to estimate the next work in a string based on n-gram analysis."),
-      
+             helpText("This project returns the most probable word following the words input in the text box below. "),
+            
+             tags$br(),
+             
              textInput(inputId = "stringInput", 
                        label = "Enter string to guess next word",
                        value = "", 
                        width = NULL),
              
+             tags$br(),
+             
              sliderInput("sliderGuesses", 
-                          label = "Guesses to be returned",
+                          label = "Probabilistic matches to be returned in the summary table",
                           min = 1, max = 10, value = 3 , step = 1)
+             
+             
              ),
     
     mainPanel(
-        h3("The most probable next word is:"),
-        h5(textOutput("text1") , align = 'center' , style = "color:red"),
-        h2(" "),   
-        h2(" "),
-        h2(" "),
-
+      
+     
+      tabsetPanel(
+        tabPanel('Results',
+                 
+                 h4("The most probable word following the string:"),
+                 textOutput("textWords"),
+                 tags$br(),
+                 h4("is:"),
+                 h3(textOutput("text1") , align = 'center' , style = "color:red"),
+                 tags$br(),
+                 tags$hr(color="grey" , WIDTH="80%" , height="10" ), 
+                 h4("Summary table:"),
+                 dataTableOutput("matchTable")),
         
-        dataTableOutput("matchTable")
+        tabPanel('Instructions',
+                 h3("The most probable next word is:")),
+        
+        tabPanel('Design',
+                 h3("The most probable next word is:"))
+      )
+      
     )
     )
 ))

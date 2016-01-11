@@ -26,17 +26,35 @@ shinyUI(fluidPage(
     
     mainPanel(
       
-     
       tabsetPanel(
         tabPanel('Results',
                  
                  h4("The most probable word following the string:"),
                  textOutput("textWords"),
+
+                 #textOutput("text2Gram"),
+                 #textOutput("text3Gram"),
+        
+                 
+                 #h4("/////terms Below /////"),
+                    textOutput("formed1G"),
+                    textOutput("formed2G"),
+                    textOutput("formed3G"),
+                    textOutput("formed4G"),
+                 #h4("/////terms above /////"),
+                 
                  tags$br(),
                  h4("is:"),
-                 h3(textOutput("text1") , align = 'center' , style = "color:red"),
+                 
+
+                 h5(textOutput("text1") , align = 'center' , style = "color:red"),
+                 h5(textOutput("text2") , align = 'center' , style = "color:red"),
+                 h5(textOutput("text3") , align = 'center' , style = "color:red"),
+                 
+                 textOutput("list2items"),
                  tags$br(),
                  tags$hr(color="grey" , WIDTH="80%" , height="10" ), 
+                 
                  h4("Summary table:"),
                  dataTableOutput("matchTable")),
         

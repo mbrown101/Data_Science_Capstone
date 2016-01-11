@@ -46,17 +46,22 @@ shinyUI(fluidPage(
                  tags$br(),
                  h4("is:"),
                  
-
-                 h5(textOutput("text1") , align = 'center' , style = "color:red"),
+                 h5(textOutput("gram2") , align = 'center' , style = "color:red"),
+                 h5(textOutput("gram3") , align = 'center' , style = "color:red"),
+                 h5(textOutput("gram4") , align = 'center' , style = "color:red"),
+                 h5(textOutput("gram5") , align = 'center' , style = "color:red"),
                  h5(textOutput("text2") , align = 'center' , style = "color:red"),
-                 h5(textOutput("text3") , align = 'center' , style = "color:red"),
+
                  
                  textOutput("list2items"),
                  tags$br(),
                  tags$hr(color="grey" , WIDTH="80%" , height="10" ), 
                  
-                 h4("Summary table:"),
-                 dataTableOutput("matchTable")),
+                 h4("Summary tables:"),
+                 dataTableOutput("matchTable2"),
+                 dataTableOutput("matchTable3"),
+                 dataTableOutput("matchTable4"),
+                 dataTableOutput("matchTable5")),
         
         tabPanel('Instructions',
                  h3("The most probable next word is:")),

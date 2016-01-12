@@ -58,10 +58,25 @@ shinyServer(function(input, output) {
     })
     
     
+    
+    
+    
+    logical2 <- reactive({ 
+      if ( length(last_1()) == 1 ){
+        arrange(oracle2gram[ which( oracle2gram$leadingGram == tolower( trimws( paste(last_1() , collapse = ' ')))) , ] , -count)[1,3]         
+      } 
+    })
+    
+    logical3 <- reactive({ 
+      if ( length(last_2()) == 2 ){
+        arrange(oracle3gram[ which( oracle3gram$leadingGram == tolower( trimws( paste(last_2() , collapse = ' ')))) , ] , -count)[1,3]         
+      } 
+    })
+    
     logical4 <- reactive({ 
       if ( length(last_3()) == 3 ){
         arrange(oracle4gram[ which( oracle4gram$leadingGram == tolower( trimws( paste(last_3() , collapse = ' ')))) , ] , -count)[1,4]         
-      } else {"Totally Nothing to see in logical4"}
+      }  
     })
     
     logical5 <- reactive({ 
@@ -71,8 +86,12 @@ shinyServer(function(input, output) {
     })
     
     output$mesh <- reactive({
-      ifelse ( !is.null(logical5()) , logical5() , logical4() ) 
-    })
+       ifelse( !is.null(logical5()) , logical5() , 
+               ifelse( !is.null(logical4()) , logical4() , 
+                     ifelse( !is.null(logical3()) , logical3() , 
+                            ifelse( !is.null(logical2()) , logical2() , 'no matches found')))) })
+                
+
     
  #### Table outputs  
 

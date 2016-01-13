@@ -95,6 +95,49 @@ shinyServer(function(input, output) {
     
  #### Table outputs  
 
+    ### Table mesh
+    
+    
+    output$tabmesh <- renderDataTable({  
+      if( !is.null(tab5()) ) {tab5()}
+          else { if(!is.null(tab4())) {tab4()}
+               else { if(!is.null(tab3())) {tab3()}
+                    else { if(!is.null(tab2())) {tab2()} }}}
+    })
+    
+    
+    tab2 <- reactive({
+      if ( length(last_1()) == 1 ){
+        arrange(oracle2gram[ which( oracle2gram$leadingGram == tolower( trimws( paste(last_1() , collapse = ' ')))) , ] , -count)[1:input$sliderGuesses,]        
+      } else{'go away, you bother me'}
+    })#, options = list(orderClasses = TRUE , searching = FALSE , paging = FALSE)) 
+  
+  
+    tab3 <- reactive({
+      if ( length(last_2()) == 2 ){
+        arrange(oracle3gram[ which( oracle3gram$leadingGram == tolower( trimws( paste(last_2() , collapse = ' ')))) , ] , -count)[1:input$sliderGuesses,]        
+      } 
+    })#, options = list(orderClasses = TRUE , searching = FALSE , paging = FALSE)) 
+
+    
+    tab4 <- reactive({
+      if ( length(last_3()) == 3 ){
+        arrange(oracle4gram[ which( oracle4gram$leadingGram == tolower( trimws( paste(last_3() , collapse = ' ')))) , ] , -count)[1:input$sliderGuesses,]        
+      } 
+    })#, options = list(orderClasses = TRUE , searching = FALSE , paging = FALSE)) 
+   
+ 
+    tab5 <- reactive({
+      if ( length(last_4()) == 4  ){
+        arrange(oracle5gram[ which( oracle5gram$leadingGram == tolower( trimws( paste(last_4() , collapse = ' ')))) , ] , -count)[1:input$sliderGuesses,]        
+      } 
+    })#, options = list(orderClasses = TRUE , searching = FALSE , paging = FALSE)) 
+    
+##### test table
+    #output$tabmesh2 <- renderDataTable({ tab2() })
+    
+        
+#### Single tables    
     output$matchTable2 = renderDataTable({ 
       if ( length(last_1()) == 1 ){
         arrange(oracle2gram[ which(oracle2gram$leadingGram == tolower(trimws(paste(last_1() , collapse = ' '))) ) , ], -count)[1:input$sliderGuesses,]

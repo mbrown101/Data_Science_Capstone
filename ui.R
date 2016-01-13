@@ -1,12 +1,14 @@
 # ui.R
 
-shinyUI(fluidPage(
+
+
+shinyUI(fluidPage(theme = "bootstrap.css",
     titlePanel("Coursera Data Science Project"),
 
     sidebarLayout(
         sidebarPanel(
         
-             helpText("This project returns the most probable word following the words input in the text box below. "),
+             helpText("This project returns the most probable word following the words input in the text box below. Words should be separated by a single space."),
             
              tags$br(),
              
@@ -18,8 +20,8 @@ shinyUI(fluidPage(
              tags$br(),
              
              sliderInput("sliderGuesses", 
-                          label = "Probabilistic matches to be returned in the summary table",
-                          min = 1, max = 10, value = 3 , step = 1)
+                          label = "Number of matches returned in the summary table",
+                          min = 1, max = 10, value = 4 , step = 1)
              
              
              ),
@@ -29,8 +31,8 @@ shinyUI(fluidPage(
       tabsetPanel(
         tabPanel('Results',
                  
-                 h4("The most probable word following the string:"),
-                 textOutput("textWords"),
+                 h4("The most probable next word is:"),
+                 #textOutput("textWords"),
 
                  #textOutput("text2Gram"),
                  #textOutput("text3Gram"),
@@ -44,47 +46,53 @@ shinyUI(fluidPage(
                     #textOutput("tailTest"),
                  #h4("/////terms above /////"),
                  
-                 h4("/////words Below /////"),
-                 textOutput("w_1"),
-                 textOutput("w_2"),
-                 textOutput("w_3"),
-                 textOutput("w_4"),
-                 h4("/////words above /////"),
+                 #h4("/////words Below /////"),
+                 #textOutput("w_1"),
+                 #textOutput("w_2"),
+                 #textOutput("w_3"),
+                 #textOutput("w_4"),
+                 #h4("/////words above /////"),
                  
                  
                  
                  tags$br(),
-                 h4("lookups are:"),
+                 tags$br(),
+                 #h4("the most probable next word is:"),
                  
-                 h5(textOutput("gram2") , align = 'center' , style = "color:red"),
-                 h5(textOutput("gram3") , align = 'center' , style = "color:red"),
-                 h5(textOutput("gram4") , align = 'center' , style = "color:red"),
-                 h5(textOutput("gram5") , align = 'center' , style = "color:red"),
-                 h5(textOutput("mesh") , align = 'center' , style = "color:red"),
+                 #h5(textOutput("gram2") , align = 'center' , style = "color:red"),
+                 #h5(textOutput("gram3") , align = 'center' , style = "color:red"),
+                 #h5(textOutput("gram4") , align = 'center' , style = "color:red"),
+                 #h5(textOutput("gram5") , align = 'center' , style = "color:red"),
+                 h3(textOutput("mesh") , align = 'center' , style = "color:red"),
                
       
-                 h4("length of tail_2:"),
-                 textOutput("length2tail"),
+                 #h4("length of tail_2:"),
+                 #textOutput("length2tail"),
                  tags$br(),
-                 tags$hr(color="grey" , WIDTH="80%" , height="10" ), 
+                 tags$br(),
+                 tags$br(),
+                 tags$hr(color="grey" , WIDTH="100%" , height="10" ), 
+
                  
-                 h4("mesh tables:"),
-                 dataTableOutput("tabmesh"),
-                 dataTableOutput("tabmesh2"),
-                 
-                 h4("Summary tables:"),
-                 dataTableOutput("matchTable2"),
-                 dataTableOutput("matchTable3"),
-                 dataTableOutput("matchTable4"),
-                 dataTableOutput("matchTable5")),
+                 h4("Summary table:"),
+
+                 #dataTableOutput("matchTable2"),
+                 #dataTableOutput("matchTable3"),
+                 #dataTableOutput("matchTable4"),
+                 #dataTableOutput("matchTable5")
+                 dataTableOutput("tabmesh")),
         
         tabPanel('Instructions',
-                 h3("The most probable next word is:")),
+                 tags$br(),
+                 h5("This project returns the most probable word following the words input in the text box below. Words should be separated by a single space.")),
         
         tabPanel('Design',
-                 h3("The most probable next word is:"))
+                 tags$br(),
+                 h5("This shiny app uses a randomly sampled corpus of three input texts.  2, 3, 4 and 5-grams are then formed.  Each of the grams are split into a trailing gram (the last term of the gram) and a leading gram (all the words to the left of the last word.)  "))
       )
       
     )
     )
 ))
+
+

@@ -37,25 +37,40 @@ shinyUI(fluidPage(
         
                  
                  #h4("/////terms Below /////"),
-                    textOutput("formed1G"),
-                    textOutput("formed2G"),
-                    textOutput("formed3G"),
-                    textOutput("formed4G"),
+                    #textOutput("formed1G"),
+                    #textOutput("formed2G"),
+                    #textOutput("formed3G"),
+                    #textOutput("formed4G"),
+                    #textOutput("tailTest"),
                  #h4("/////terms above /////"),
                  
+                 h4("/////words Below /////"),
+                 textOutput("w_1"),
+                 textOutput("w_2"),
+                 textOutput("w_3"),
+                 textOutput("w_4"),
+                 h4("/////words above /////"),
+                 
+                 
+                 
                  tags$br(),
-                 h4("is:"),
+                 h4("lookups are:"),
                  
                  h5(textOutput("gram2") , align = 'center' , style = "color:red"),
                  h5(textOutput("gram3") , align = 'center' , style = "color:red"),
                  h5(textOutput("gram4") , align = 'center' , style = "color:red"),
                  h5(textOutput("gram5") , align = 'center' , style = "color:red"),
-                 h5(textOutput("text2") , align = 'center' , style = "color:red"),
-
-                 
-                 textOutput("list2items"),
+                 h5(textOutput("mesh") , align = 'center' , style = "color:red"),
+               
+      
+                 h4("length of tail_2:"),
+                 textOutput("length2tail"),
                  tags$br(),
                  tags$hr(color="grey" , WIDTH="80%" , height="10" ), 
+                 
+                 h4("mesh tables:"),
+                 dataTableOutput("tabmesh"),
+                 dataTableOutput("tabmesh2"),
                  
                  h4("Summary tables:"),
                  dataTableOutput("matchTable2"),

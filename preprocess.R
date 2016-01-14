@@ -8,6 +8,7 @@ library(R.utils)       # utility
 library(quanteda)      # for tokenization
 #library(RColorBrewer)  # wordcloud
 library(plyr)          # data ordering
+library(dplyr) 
 library(reshape)
 library(stringi)
 library(caret)
@@ -109,33 +110,47 @@ for(i in 1:nrow(feature_counts.2g.mat)){
 oracle.2df <- as.data.frame(feature_counts.2g.mat , stringsAsFactors = FALSE)
 oracle.2df <- oracle.2df[which(oracle.2df[,3] != -999 ) , ] 
 oracle.2df[,2] <- as.integer(oracle.2df[,2])
-names(oracle.2df) <- c('bigram' , 'count' , 'leadingGram' , 'trailingGram' )
+names(oracle.2df) <- c('bigram' , 'frequency' , 'leading_Gram' , 'trailing_Gram' )
+oracle.2df <- oracle.2df[order(oracle.2df$leading_Gram , -oracle.2df$frequency ),]
+oracle.2df <- as.matrix(oracle.2df)
 
-# Find frequency of ngram
-one_gram_counts <- table(oracle.2df[,3])
-one_gram_counts.df <- as.data.frame(one_gram_counts)
-names(one_gram_counts.df) <- c('leadingGram' , 'freq')
+oracle.2df[,5] <- 0
+oracle.2df[1,5] <- 1
 
-data.oracle.2df <- merge(oracle.2df, one_gram_counts.df, by = "leadingGram")
-data.oracle.2df[,3] <- as.integer(data.oracle.2df[,3])
-#data.oracle.3df.ord <- data.oracle.3df[order(data.oracle.3df$leadingGram , data.oracle.3df$freq.y) ,]
-#nrow(data.oracle.3df.ord.sav[which(data.oracle.3df.ord.sav[,6] > 10 & max(data.oracle.3df.ord.sav[,3]) > 15),])
 
-#Find pseudo-unique entries
-#two_gram_freq2 <- data.oracle.2df[which(data.oracle.2df[,5] <= 3),]
+### Select highest value of each leading_Gram 
+for(i in 2:nrow(oracle.2df)) {
+    if(oracle.2df[i,3] != oracle.2df[i-1,3]){
+    oracle.2df[i,5] <- 1
+    print(i)
+   }
+}
 
-#Residual
-#three_gram_freq2.resid <- data.oracle.2df[which(data.oracle.2df[,5] > 3),]
+oracle.2df.redux <- oracle.2df[which(oracle.2df[,5] == 1) , ]
+oracle.2df.residual <- oracle.2df[which(oracle.2df[,5] == 0) , ]
 
-#Higher Freq
-#three_gram_freq2.resid.higher.Freq <- #three_gram_freq2.resid[which(three_gram_freq2.resid[,3] > 4),]
 
-#project.data.2df <- rbind(three_gram_freq2.resid.higher.Freq , two_gram_freq2 )
+oracle.2df.redux.final <- as.data.frame(oracle.2df.redux , stringsAsFactors = FALSE) 
 
-data.oracle.2df <- data.oracle.2df[ , -5]
-data.oracle.2df <- data.oracle.2df[ , -2]
+oracle.2df.redux.final[,5] <- oracle.2df.redux.final[ , 2]
+oracle.2df.redux.final <- oracle.2df.redux.final[ , -2]
+oracle.2df.redux.final <- oracle.2df.redux.final[ , -1]
+names(oracle.2df.redux.final) <- c('leading_Gram' , 'trailing_Gram' , 'frequency'  )
 
-saveRDS(data.oracle.2df  , "/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/shiny/data_science_project/data/project.data.2df.rds")
+### get rid of leading grams with numbers:
+oracle.2df.redux.final[,4] <- 1
+for (i in 1:nrow(oracle.2df.redux.final)){
+  if(grepl("[[:digit:]]+",oracle.2df.redux.final[i,1])){
+      oracle.2df.redux.final[i,4] <- 0
+      print(paste(oracle.2df.redux.final[i,] , i))
+  }
+}
+
+oracle.2df.prod <- oracle.2df.redux.final[which(oracle.2df.redux.final$V4 == 1),]
+oracle.2df.prod <- oracle.2df.prod[,-4]
+oracle.2df.prod[,3] <- as.numeric(oracle.2df.prod[,3])
+
+saveRDS(oracle.2df.prod  , "/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/shiny/data_science_project/data/project.data.2df.rds")
 
 
 
@@ -148,8 +163,9 @@ feature_counts.3g[,2] <- feature_counts.3g[,1]
 feature_counts.3g[,1] <- rownames(feature_counts.3g)
 feature_counts.3g[,3]  <- -999 
 feature_counts.3g[,4] <- -999
-feature_counts.3g <- feature_counts.3g[which(feature_counts.3g[,2])>1,]
-names(feature_counts.3g) <- c('trigram' , 'count' , 'leadingGram' , 'trailingGram')
+names(feature_counts.3g) <- c('trigram' , 'frequency' , 'leadingGram' , 'trailingGram')
+
+feature_counts.3g <- feature_counts.3g[which(feature_counts.3g$frequency > 1) , ]
 
 feature_counts.3g.mat <- as.matrix(feature_counts.3g)
 
@@ -166,31 +182,28 @@ for(i in 1:nrow(feature_counts.3g)){
 
 oracle.3df <- as.data.frame(feature_counts.3g.mat , stringsAsFactors = FALSE)
 oracle.3df <- oracle.3df[which(oracle.3df[,3] != -999 ) , ] 
-oracle.3df[,2] <- as.integer(oracle.3df.filt[,2])
-names(oracle.3df) <- c('trigram' , 'count' , 'leadingGram' , 'trailingGram' )
+oracle.3df[,2] <- as.integer(oracle.3df[,2])
+oracle.3df <- oracle.3df[,-1]
+oracle.3df[,4] <- oracle.3df[,1]
+oracle.3df <- oracle.3df[,-1]
+names(oracle.3df) <- c('leading_Gram' , 'trailing_Gram' , 'frequency' )
 
-# Find frequency of ngram
-two_gram_counts <- table(oracle.3df[,3])
-two_gram_counts.df <- as.data.frame(two_gram_counts)
-names(two_gram_counts.df) <- c('leadingGram' , 'freq')
+oracle.3df.redux <- oracle.3df
+oracle.3df.redux[,4] <- 1
 
-data.oracle.3df <- merge(oracle.3df, two_gram_counts.df, by = "leadingGram")
-data.oracle.3df[,3] <- as.integer(data.oracle.3df[,3])
+for (i in 1:nrow(oracle.3df.redux)){
+  if(grepl("[[:digit:]]+",oracle.3df.redux[i,1])){
+      oracle.3df.redux[i,4] <- 0
+      print(paste(oracle.3df.redux[i,] , i))
+  }
+}
 
-#Find pseudo-unique entries
-three_gram_freq3 <- data.oracle.3df[which(data.oracle.3df[,5] <= 2),]
+oracle.3df.prod <- oracle.3df.redux[which(oracle.3df.redux$V4 == 1),]
+oracle.3df.prod <- oracle.3df.prod[,-4]
+oracle.3df.prod <- oracle.3df.prod[which(oracle.3df.prod$frequency > 4) ,]
 
-#Residual
-three_gram_freq3.resid <- data.oracle.3df[which(data.oracle.3df[,5] > 2),]
 
-#Higher Freq
-three_gram_freq1.resid.higher.Freq <- three_gram_freq3.resid[which(three_gram_freq3.resid[,3] > 5),]
-
-project.data.3df <- rbind(three_gram_freq1.resid.higher.Freq , three_gram_freq3 )
-
-project.data.3df <- project.data.3df[, -5]
-project.data.3df <- project.data.3df[, -2]
-saveRDS(project.data.3df , "/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/shiny/data_science_project/data/project.data.3df.rds")
+saveRDS(oracle.3df.prod , "/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/shiny/data_science_project/data/project.data.3df.rds")
 
 
 ######### Form 4-gram data matrix
@@ -203,7 +216,7 @@ feature_counts.4g[,1] <- rownames(feature_counts.4g)
 feature_counts.4g[,3]  <- -999 
 feature_counts.4g[,4] <- -999
 feature_counts.4g <- feature_counts.4g[which(feature_counts.4g[,2]>1),]
-names(feature_counts.4g) <- c('quadgram' , 'count' , 'leadingGram' , 'trailingGram')
+names(feature_counts.4g) <- c('quadgram' , 'frequency' , 'leading_Gram' , 'trailing_Gram')
 
 feature_counts.4g.mat <- as.matrix(feature_counts.4g)
 
@@ -221,8 +234,26 @@ for(i in 1:nrow(feature_counts.4g.mat)){
 oracle.4df <- as.data.frame(feature_counts.4g.mat , stringsAsFactors = FALSE)
 oracle.4df <- oracle.4df[which(oracle.4df[,3] != -999 ) , ] 
 oracle.4df[,2] <- as.integer(oracle.4df[,2])
-names(oracle.4df) <- c('quadgram' , 'count' , 'leadingGram' , 'trailingGram' )
+oracle.4df[,5] <- oracle.4df[,2]
+oracle.4df <- oracle.4df[,-1]
+oracle.4df <- oracle.4df[,-1]
+names(oracle.4df) <- c('leading_Gram' , 'trailing_Gram' , 'frequency' )
 
+
+
+### Remove any row with a number in the leading term
+oracle.4df[,4] <- 1
+for (i in 1:nrow(oracle.4df)){
+  if(grepl("[[:digit:]]+",oracle.4df[i,1])){
+      oracle.4df[i,4] <- 0
+      print(paste(oracle.4df[i,] , i))
+  }
+}
+oracle.4df <- oracle.4df[which(oracle.4df$V4 == 1) ,]
+oracle.4df <- oracle.4df[,-4]
+
+### Thin out the file by removing low frequency entries
+oracle.4df <- oracle.4df[which(oracle.4df$frequency > 2) ,]
 
 saveRDS(oracle.4df , "/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/shiny/data_science_project/data/project.data.4df.rds")
 
@@ -236,7 +267,7 @@ feature_counts.5g[,1] <- rownames(feature_counts.5g)
 feature_counts.5g[,3]  <- -999 
 feature_counts.5g[,4] <- -999
 feature_counts.5g <- feature_counts.5g[which(feature_counts.5g[,2]>1),]
-names(feature_counts.5g) <- c('pentagram' , 'count' , 'leadingGram' , 'trailingGram')
+names(feature_counts.5g) <- c('pentagram' , 'count' , 'leading_Gram' , 'trailing_Gram')
 
 feature_counts.5g.mat <- as.matrix(feature_counts.5g)
 
@@ -254,7 +285,25 @@ for(i in 1:nrow(feature_counts.5g.mat)){
 oracle.5df <- as.data.frame(feature_counts.5g.mat , stringsAsFactors = FALSE)
 oracle.5df <- oracle.5df[which(oracle.5df[,3] != -999 ) , ] 
 oracle.5df[,2] <- as.integer(oracle.5df[,2])
-names(oracle.5df) <- c('pentagram' , 'count' , 'leadingGram' , 'trailingGram' )
+oracle.5df <- oracle.5df[,-1]  
+oracle.5df[,4] <- oracle.5df[,1] 
+oracle.5df <- oracle.5df[,-1]  
+names(oracle.5df) <- c( 'leading_Gram' , 'trailing_Gram' , 'frequency')
+
+### Remove numbers from leading gram 
+oracle.5df[,4] <- 1
+for (i in 1:nrow(oracle.5df)){
+  if(grepl("[[:digit:]]+",oracle.5df[i,1])){
+      oracle.5df[i,4] <- 0
+      print(paste(oracle.5df[i,] , i))
+  }
+}
+
+
+
+
+oracle.5df <- oracle.5df[which(oracle.5df$V4 == 1) ,]
+oracle.5df <- oracle.5df[,-4]
 
 
 saveRDS(oracle.5df , "/Users/mike.brown/Documents/Coursera_Data_Science/Capstone/shiny/data_science_project/data/project.data.5df.rds")

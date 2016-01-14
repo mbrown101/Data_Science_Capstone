@@ -21,7 +21,7 @@ shinyUI(fluidPage(theme = "bootstrap.css",
              
              sliderInput("sliderGuesses", 
                           label = "Number of matches returned in the summary table",
-                          min = 1, max = 10, value = 4 , step = 1)
+                          min = 1, max = 8, value = 4 , step = 1)
              
              
              ),

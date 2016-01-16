@@ -1,0 +1,66 @@
+Coursera Data Science Capstone Project
+========================================================
+
+
+Word Prediction Shiny App: https://mgbrown.shinyapps.io/data_science_project
+
+<br>
+<br>
+<br>
+<br>
+
+![Shiny app screen-shot](JHU.png)
+<br>
+Michael Brown  |  JAN 2016
+
+
+
+Overview
+========================================================
+
+This project uses data science techniques to design a Natural Language Processing (NLP) word prediction algorithm which is subsequently implemented as a Shiny app.  Given a phrase, the app will predict the next word.
+
+The data used in this project is derived from the HC Corpora can be found at http://www.corpora.heliohost.org/aboutcorpus.html  
+
+The data used in this project consists of the three files:  
+
+- Blogs
+- Tweets
+- News reports
+
+Shiny App - Instructions 
+========================================================
+
+
+**Instructions:**  To use the app, enter words separated by a single space.  As words are entered, the next most probable word is automatically displayed on the right side of the screen. 
+
+![Shiny app screen-shot](myapp.png)
+
+**Table Presentation**  Input words are matched against the highest order 1, 2, 3 or 4-gram match.  If a match is made, the corresponding table of n-grams is displayed.  The number of n-grams in the table is controlled by the slider on the left side of the screen.    
+
+
+
+
+
+
+Data Preprocessing
+======================================================== 
+
+**Sampling:**  Each data file was sampled at a rate of 45%.  This sample rate was a compromise between getting the highest coverage possible and creating four n-gram data sets what were each less than 5MB.   
+
+**Cleaning:** After sampling into a single file, the corpus was transformed into four document feature models (DFM) using the quanteda library.  The transformation forced all text to lower case, removed numbers, twitter symbols and separators. 
+
+**N-Gram Data Sets:** Each DFM was subsequently manipulated to a data frame consisting of a leading n-gram and following 1-gram (the word returned as the guess).  The n-gram data sets were finally reduced in size to fit the 5MB design criteria to accommodate performance considerations.  
+
+
+
+Description of Algorithm
+========================================================
+**Tail function:**  The Shiny app uses a back-off model that simultaneously queries against the four n-gram data sets. As the user enters a string of words, the responsive tail functions calculate 1, 2, 3 and 4-grams.  If the user enters more than 4 words, the tail functions keep refreshing to isolate the trailing words.  
+
+**N-gram Matching Model:**  The model matches the highest order n-gram against its corresponding data set to render the following 1-gram (next word). The high order n-grams are biased to the end of the sentence which is where the prediction is most diverse. The highest order n-gram also offers the highest probability of contextual match which is critical for grammar and slang. If there are multiple matches, the highest order n-gram is selected.
+
+
+
+
+
